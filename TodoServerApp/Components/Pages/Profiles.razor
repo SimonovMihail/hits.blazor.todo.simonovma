@@ -1,0 +1,50 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@inject IDataService data 
+
+@attribute [Authorize]
+
+<PageTitle>Анкеты</PageTitle>
+
+<h1>Найти пару</h1>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Имя</th>
+            <th>Возраст</th>
+            <th>Город</th>
+            <th>О себе</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if(profiles == null)
+        {
+            <tr>
+                <td colspan="5">Загрузка...</td>
+            </tr>
+        }
+        else
+        {
+            @foreach (var profile in profiles)
+            {
+                <tr>
+                    <td>@profile.Name</td>
+                    <td>@profile.Age</td>
+                    <td>@profile.City</td>
+                    <td>@profile.Bio</td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+@code {
+    IEnumerable<Profile>? profiles;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        profiles = await data.GetProfilesAsync();
+    }
+}
