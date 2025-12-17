@@ -5,5 +5,7 @@ namespace TodoServerApp.Data.Interfaces
     public interface IDataService
     {
         Task<IEnumerable<Profile>> GetProfilesAsync();
+
+        Task AddProfileAsync(Profile profile);
     }
 }

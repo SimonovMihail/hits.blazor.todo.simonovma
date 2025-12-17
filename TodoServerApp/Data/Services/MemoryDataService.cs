@@ -11,6 +11,11 @@ namespace TodoServerApp.Data.Services
             new() { Id = 3, Name = "Ева", Age = 23, City = "Казань", Bio = "Просто смотрю", LastActive = DateTime.Now.AddHours(-5) }
         };
 
+        public Task AddProfileAsync(Profile profile)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<IEnumerable<Profile>> GetProfilesAsync()
         {
             await Task.Delay(1000);
