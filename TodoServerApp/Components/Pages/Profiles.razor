@@ -1,12 +1,28 @@
 ﻿@page "/"
+@using TodoServerApp.Data
+@using TodoServerApp.Data.Interfaces
+@* 1. Включаем интерактивность, чтобы работал выпадающий список *@
 @rendermode InteractiveServer
-@inject IDataService data 
-
-@attribute [Authorize]
+@inject IDataService data
 
 <PageTitle>Анкеты</PageTitle>
 
 <h1>Найти пару</h1>
+
+@* Блок фильтрации *@
+<div class="row mb-3">
+    <div class="col-md-4">
+        <label>Фильтр по интересам:</label>
+        @* При изменении (onchange) вызываем метод FilterProfiles *@
+        <select class="form-select" @onchange="FilterProfiles">
+            <option value="">Все</option>
+            @foreach (var interest in allInterests)
+            {
+                <option value="@interest.Id">@interest.Title</option>
+            }
+        </select>
+    </div>
+</div>
 
 <table class="table table-bordered">
     <thead>
@@ -14,24 +30,34 @@
             <th>Имя</th>
             <th>Возраст</th>
             <th>Город</th>
+            <th>Интересы</th>
             <th>О себе</th>
         </tr>
     </thead>
     <tbody>
-        @if(profiles == null)
+        @if (displayedProfiles == null)
         {
-            <tr>
-                <td colspan="5">Загрузка...</td>
-            </tr>
+            <tr><td colspan="5">Загрузка...</td></tr>
+        }
+        else if (displayedProfiles.Count == 0)
+        {
+            <tr><td colspan="5">Никого не найдено :(</td></tr>
         }
         else
         {
-            @foreach (var profile in profiles)
+            @* 2. Важно: перебираем displayedProfiles (отфильтрованный список) *@
+            @foreach (var profile in displayedProfiles)
             {
                 <tr>
                     <td>@profile.Name</td>
                     <td>@profile.Age</td>
                     <td>@profile.City</td>
+                    <td>
+                        @foreach (var interest in profile.Interests)
+                        {
+                            <span class="badge bg-info text-dark me-1">@interest.Title</span>
+                        }
+                    </td>
                     <td>@profile.Bio</td>
                 </tr>
             }
@@ -40,11 +66,48 @@
 </table>
 
 @code {
-    IEnumerable<Profile>? profiles;
+    // Полный список (кеш), чтобы не лазить в базу при каждом клике
+    List<Profile> allProfiles = new();
+
+    // Список, который мы рисуем на экране
+    List<Profile> displayedProfiles = new();
+
+    // Список интересов для выпадайки
+    List<Interest> allInterests = new();
 
     protected override async Task OnInitializedAsync()
     {
-        await base.OnInitializedAsync();
-        profiles = await data.GetProfilesAsync();
+        // Грузим анкеты (уже с интересами, благодаря .Include в сервисе)
+        var profilesData = await data.GetProfilesAsync();
+        allProfiles = profilesData.ToList();
+
+        // Сначала показываем всех
+        displayedProfiles = allProfiles;
+
+        // Грузим список тегов для выпадайки
+        var interestsData = await data.GetInterestsAsync();
+        allInterests = interestsData.ToList();
+    }
+
+    private void FilterProfiles(ChangeEventArgs e)
+    {
+        // Получаем ID выбранного интереса из выпадайки
+        var selectedIdString = e.Value?.ToString();
+
+        if (string.IsNullOrEmpty(selectedIdString))
+        {
+            // Если выбрали "Все" (пустое значение) -> возвращаем полный список
+            displayedProfiles = allProfiles;
+        }
+        else
+        {
+            // Парсим ID
+            int selectedId = int.Parse(selectedIdString);
+
+            // Фильтруем: оставляем тех, у кого в списке Interests есть этот ID
+            displayedProfiles = allProfiles
+                .Where(p => p.Interests.Any(i => i.Id == selectedId))
+                .ToList();
+        }
     }
 }

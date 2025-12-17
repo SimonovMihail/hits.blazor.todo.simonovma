@@ -21,5 +21,7 @@ namespace TodoServerApp.Data
         public string? Bio { get; set; }
 
         public DateTime LastActive { get; set; }
+
+        public List<Interest> Interests { get; set; } = new();
     }
 }

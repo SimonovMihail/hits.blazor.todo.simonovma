@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TodoServerApp.Data;
 
@@ -11,9 +12,11 @@ using TodoServerApp.Data;
 namespace TodoServerApp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251217141743_AddInterestsTable")]
+    partial class AddInterestsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -249,7 +252,7 @@ namespace TodoServerApp.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Interests");
+                    b.ToTable("Interest");
 
                     b.HasData(
                         new
@@ -315,7 +318,7 @@ namespace TodoServerApp.Migrations
                             Age = 19,
                             Bio = "Ищу крутого",
                             City = "Когалым",
-                            LastActive = new DateTime(2025, 10, 17, 19, 47, 30, 955, DateTimeKind.Local).AddTicks(7837),
+                            LastActive = new DateTime(2025, 10, 17, 19, 17, 42, 948, DateTimeKind.Local).AddTicks(6945),
                             Name = "Катя"
                         },
                         new
@@ -324,7 +327,7 @@ namespace TodoServerApp.Migrations
                             Age = 21,
                             Bio = "Ищу игрока в покер",
                             City = "Артёмовск",
-                            LastActive = new DateTime(2025, 12, 10, 19, 47, 30, 955, DateTimeKind.Local).AddTicks(7872),
+                            LastActive = new DateTime(2025, 12, 10, 19, 17, 42, 948, DateTimeKind.Local).AddTicks(6979),
                             Name = "Димитрий"
                         },
                         new
@@ -333,7 +336,7 @@ namespace TodoServerApp.Migrations
                             Age = 23,
                             Bio = "Хожу в качалку",
                             City = "Тюмень",
-                            LastActive = new DateTime(2025, 12, 16, 22, 47, 30, 955, DateTimeKind.Local).AddTicks(7877),
+                            LastActive = new DateTime(2025, 12, 16, 22, 17, 42, 948, DateTimeKind.Local).AddTicks(6985),
                             Name = "Егор"
                         });
                 });

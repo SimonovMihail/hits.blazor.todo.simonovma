@@ -7,9 +7,19 @@ namespace TodoServerApp.Data
     {
         public DbSet<Profile> Profiles { get; set; }
 
+        public DbSet<Interest> Interests { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            builder.Entity<Interest>().HasData(
+                new Interest { Id = 1, Title = "Спорт" },
+                new Interest { Id = 2, Title = "Музыка" },
+                new Interest { Id = 3, Title = "Путешествия" },
+                new Interest { Id = 4, Title = "Игры" },
+                new Interest { Id = 5, Title = "Программирование" }
+            );
 
             builder.Entity<Profile>().HasData(
                 new() { Id = 1, Name = "Катя", Age = 19, City = "Когалым", Bio = "Ищу крутого", LastActive = DateTime.Now.AddMonths(-2) },
