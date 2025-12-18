@@ -21,10 +21,20 @@ namespace TodoServerApp.Data.Services
             throw new NotImplementedException();
         }
 
+        public Task<List<Message>> GetMessagesAsync(int user1Id, int user2Id)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<IEnumerable<Profile>> GetProfilesAsync()
         {
             await Task.Delay(1000);
             return await Task.FromResult(profiles);
+        }
+
+        public Task SendMessageAsync(Message message)
+        {
+            throw new NotImplementedException();
         }
     }
 }

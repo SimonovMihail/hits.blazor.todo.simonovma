@@ -38,5 +38,25 @@ namespace TodoServerApp.Data.Services
         {
             return await context.Interests.ToArrayAsync();
         }
+
+        public async Task<List<Message>> GetMessagesAsync(int user1Id, int user2Id)
+        {
+            return await context.Messages
+                .Include(m => m.Sender)   // подгружает имена, чтобы знать, кто пишет
+                .Include(m => m.Receiver)
+                .Where(m =>
+                    (m.SenderId == user1Id && m.ReceiverId == user2Id) || // я писал ему
+                    (m.SenderId == user2Id && m.ReceiverId == user1Id)    // он писал мне
+                )
+                .OrderBy(m => m.Created) // сортируем по времени (сначала старые, естесна)
+                .ToListAsync();
+        }
+
+        public async Task SendMessageAsync(Message message)
+        {
+            message.Created = DateTime.Now; // ставим текущее время
+            await context.Messages.AddAsync(message);
+            await context.SaveChangesAsync();
+        }
     }
 }

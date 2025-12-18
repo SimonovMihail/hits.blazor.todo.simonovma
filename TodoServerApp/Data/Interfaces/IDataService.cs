@@ -9,5 +9,9 @@ namespace TodoServerApp.Data.Interfaces
         Task AddProfileAsync(Profile profile, List<int> interestIds);
 
         Task<IEnumerable<Interest>> GetInterestsAsync();
+
+        Task<List<Message>> GetMessagesAsync(int user1Id, int user2Id);
+
+        Task SendMessageAsync(Message message);
     }
 }

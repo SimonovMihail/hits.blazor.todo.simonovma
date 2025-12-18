@@ -1,0 +1,128 @@
+﻿@page "/chat/{CurrentUserId:int}/{TargetUserId:int}"
+@using TodoServerApp.Data
+@using TodoServerApp.Data.Interfaces
+@rendermode InteractiveServer
+@inject IDataService data
+@inject NavigationManager nav
+
+<PageTitle>Чат</PageTitle>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+
+            @* Шапка чата *@
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    Чат @(targetUser != null ? $"с пользователем {targetUser.Name}" : "")
+                    <button class="btn btn-sm btn-light float-end" @onclick="GoBack">Назад</button>
+                </div>
+
+                @* Область сообщений *@
+                <div class="card-body" style="height: 400px; overflow-y: auto; background-color: #f5f5f5;">
+                    @if (messages == null)
+                    {
+                        <p>Загрузка...</p>
+                    }
+                    else if (messages.Count == 0)
+                    {
+                        <p class="text-center text-muted">История сообщений пуста. Напишите первое сообщение!</p>
+                    }
+                    else
+                    {
+                        @foreach (var msg in messages)
+                        {
+                            // определяем, кто написал: я или он
+                            bool isMyMessage = msg.SenderId == CurrentUserId;
+
+                            // выравнивание: мои справа, чужие слева
+                            string alignClass = isMyMessage ? "text-end" : "text-start";
+                            // цвет: мои синие, чужие серые
+                            string bubbleClass = isMyMessage ? "bg-primary text-white" : "bg-light border";
+
+                            <div class="mb-2 @alignClass">
+                                <div class="d-inline-block p-2 rounded @bubbleClass" style="max-width: 75%;">
+                                    <div>@msg.Text</div>
+                                    <small style="font-size: 0.7em; opacity: 0.8;">
+                                        @msg.Created.ToShortTimeString()
+                                    </small>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+
+                @* Поле ввода *@
+                <div class="card-footer">
+                    <div class="input-group">
+                        <input type="text" class="form-control"
+                               placeholder="Введите сообщение..."
+                               @bind="newMessageText"
+                               @onkeydown="HandleEnter" />
+                        <button class="btn btn-primary" @onclick="SendMessage">Отправить</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int CurrentUserId { get; set; } // Я
+    [Parameter] public int TargetUserId { get; set; }  // Собеседник
+
+    private List<Message> messages = new();
+    private Profile? targetUser;
+    private string newMessageText = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        // грузим сообщения
+        messages = await data.GetMessagesAsync(CurrentUserId, TargetUserId);
+
+        // грузим инфу о собеседнике (чтобы имя в заголовке показать)
+        // (тут мы немного халявим и грузим список всех, чтобы найти одного.
+        // в идеале нужен метод GetProfileById, но пока сойдет и так)
+        var profiles = await data.GetProfilesAsync();
+        targetUser = profiles.FirstOrDefault(p => p.Id == TargetUserId);
+    }
+
+    private async Task SendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(newMessageText)) return;
+
+        var newMsg = new Message
+        {
+            SenderId = CurrentUserId,
+            ReceiverId = TargetUserId,
+            Text = newMessageText,
+            Created = DateTime.Now
+        };
+
+        await data.SendMessageAsync(newMsg);
+
+        // очищаем поле и обновляем чат
+        newMessageText = "";
+        await LoadData();
+    }
+
+    // отправка по enter
+    private async Task HandleEnter(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await SendMessage();
+        }
+    }
+
+    private void GoBack()
+    {
+        nav.NavigateTo("/");
+    }
+}

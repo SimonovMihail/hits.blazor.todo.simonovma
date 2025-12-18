@@ -1,7 +1,6 @@
 ﻿@page "/"
 @using TodoServerApp.Data
 @using TodoServerApp.Data.Interfaces
-@* 1. Включаем интерактивность, чтобы работал выпадающий список *@
 @rendermode InteractiveServer
 @inject IDataService data
 
@@ -9,11 +8,9 @@
 
 <h1>Найти пару</h1>
 
-@* Блок фильтрации *@
 <div class="row mb-3">
     <div class="col-md-4">
         <label>Фильтр по интересам:</label>
-        @* При изменении (onchange) вызываем метод FilterProfiles *@
         <select class="form-select" @onchange="FilterProfiles">
             <option value="">Все</option>
             @foreach (var interest in allInterests)
@@ -32,6 +29,7 @@
             <th>Город</th>
             <th>Интересы</th>
             <th>О себе</th>
+            <th>Действия</th>
         </tr>
     </thead>
     <tbody>
@@ -45,7 +43,6 @@
         }
         else
         {
-            @* 2. Важно: перебираем displayedProfiles (отфильтрованный список) *@
             @foreach (var profile in displayedProfiles)
             {
                 <tr>
@@ -59,6 +56,11 @@
                         }
                     </td>
                     <td>@profile.Bio</td>
+                    <td>
+                        <a href="/chat/1/@profile.Id" class="btn btn-primary btn-sm">
+                            Написать
+                        </a>
+                    </td>
                 </tr>
             }
         }
@@ -66,45 +68,35 @@
 </table>
 
 @code {
-    // Полный список (кеш), чтобы не лазить в базу при каждом клике
     List<Profile> allProfiles = new();
 
-    // Список, который мы рисуем на экране
     List<Profile> displayedProfiles = new();
 
-    // Список интересов для выпадайки
     List<Interest> allInterests = new();
 
     protected override async Task OnInitializedAsync()
     {
-        // Грузим анкеты (уже с интересами, благодаря .Include в сервисе)
         var profilesData = await data.GetProfilesAsync();
         allProfiles = profilesData.ToList();
 
-        // Сначала показываем всех
         displayedProfiles = allProfiles;
 
-        // Грузим список тегов для выпадайки
         var interestsData = await data.GetInterestsAsync();
         allInterests = interestsData.ToList();
     }
 
     private void FilterProfiles(ChangeEventArgs e)
     {
-        // Получаем ID выбранного интереса из выпадайки
         var selectedIdString = e.Value?.ToString();
 
         if (string.IsNullOrEmpty(selectedIdString))
         {
-            // Если выбрали "Все" (пустое значение) -> возвращаем полный список
             displayedProfiles = allProfiles;
         }
         else
         {
-            // Парсим ID
             int selectedId = int.Parse(selectedIdString);
 
-            // Фильтруем: оставляем тех, у кого в списке Interests есть этот ID
             displayedProfiles = allProfiles
                 .Where(p => p.Interests.Any(i => i.Id == selectedId))
                 .ToList();
