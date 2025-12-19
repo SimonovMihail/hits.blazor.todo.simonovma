@@ -1,9 +1,12 @@
-﻿@page "/chat/{CurrentUserId:int}/{TargetUserId:int}"
+﻿@page "/chat/{TargetUserId:int}"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
 @using TodoServerApp.Data
 @using TodoServerApp.Data.Interfaces
 @rendermode InteractiveServer
 @inject IDataService data
 @inject NavigationManager nav
+
 
 <PageTitle>Чат</PageTitle>
 
@@ -11,14 +14,12 @@
     <div class="row">
         <div class="col-md-8 offset-md-2">
 
-            @* Шапка чата *@
             <div class="card">
                 <div class="card-header bg-primary text-white">
                     Чат @(targetUser != null ? $"с пользователем {targetUser.Name}" : "")
                     <button class="btn btn-sm btn-light float-end" @onclick="GoBack">Назад</button>
                 </div>
 
-                @* Область сообщений *@
                 <div class="card-body" style="height: 400px; overflow-y: auto; background-color: #f5f5f5;">
                     @if (messages == null)
                     {
@@ -33,7 +34,7 @@
                         @foreach (var msg in messages)
                         {
                             // определяем, кто написал: я или он
-                            bool isMyMessage = msg.SenderId == CurrentUserId;
+                            bool isMyMessage = msg.SenderId == CurrentProfileId;
 
                             // выравнивание: мои справа, чужие слева
                             string alignClass = isMyMessage ? "text-end" : "text-start";
@@ -51,8 +52,6 @@
                         }
                     }
                 </div>
-
-                @* Поле ввода *@
                 <div class="card-footer">
                     <div class="input-group">
                         <input type="text" class="form-control"
@@ -69,22 +68,43 @@
 </div>
 
 @code {
-    [Parameter] public int CurrentUserId { get; set; } // Я
-    [Parameter] public int TargetUserId { get; set; }  // Собеседник
+    [Parameter] public int TargetUserId { get; set; }
 
+    private int CurrentProfileId;
     private List<Message> messages = new();
     private Profile? targetUser;
     private string newMessageText = "";
 
+    @inject AuthenticationStateProvider AuthStateProvider
+
     protected override async Task OnInitializedAsync()
     {
-        await LoadData();
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity is not null && user.Identity.IsAuthenticated)
+        {
+            var userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!string.IsNullOrEmpty(userId))
+            {
+                var myProfile = await data.GetProfileByUserIdAsync(userId);
+
+                if (myProfile != null)
+                {
+                    CurrentProfileId = myProfile.Id;
+                    await LoadData();
+                }
+                else
+                {
+                    nav.NavigateTo("/add-profile");
+                }
+            }
+        }
     }
 
     private async Task LoadData()
     {
         // грузим сообщения
-        messages = await data.GetMessagesAsync(CurrentUserId, TargetUserId);
+        messages = await data.GetMessagesAsync(CurrentProfileId, TargetUserId);
 
         // грузим инфу о собеседнике (чтобы имя в заголовке показать)
         // (тут мы немного халявим и грузим список всех, чтобы найти одного.
@@ -99,7 +119,7 @@
 
         var newMsg = new Message
         {
-            SenderId = CurrentUserId,
+            SenderId = CurrentProfileId,
             ReceiverId = TargetUserId,
             Text = newMessageText,
             Created = DateTime.Now

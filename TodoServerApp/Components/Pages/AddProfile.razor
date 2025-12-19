@@ -2,6 +2,8 @@
 @rendermode InteractiveServer
 @using TodoServerApp.Data
 @using TodoServerApp.Data.Interfaces
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthStateProvider
 @inject IDataService data
 @inject NavigationManager header
 
@@ -72,7 +74,26 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Загружаем список тегов из базы
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (!user.Identity.IsAuthenticated)
+        {
+            header.NavigateTo("Account/Login");
+            return;
+        }
+
+        var userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (userId != null)
+        {
+            var existingProfile = await data.GetProfileByUserIdAsync(userId);
+            if (existingProfile != null)
+            {
+                header.NavigateTo("/");
+                return;
+            }
+        }
+
         var interests = await data.GetInterestsAsync();
         allInterests = interests.ToList();
     }
@@ -91,8 +112,20 @@
 
     private async Task SaveProfile()
     {
-        await data.AddProfileAsync(newProfile, selectedInterestIds);
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
 
+        if (!user.Identity.IsAuthenticated)
+        {
+            header.NavigateTo("Account/Login");
+            return;
+        }
+
+        var userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        newProfile.UserId = userId;
+
+        await data.AddProfileAsync(newProfile, selectedInterestIds);
         header.NavigateTo("/");
     }
 }

@@ -13,5 +13,7 @@ namespace TodoServerApp.Data.Interfaces
         Task<List<Message>> GetMessagesAsync(int user1Id, int user2Id);
 
         Task SendMessageAsync(Message message);
+
+        Task<Profile> GetProfileByUserIdAsync(string userId);
     }
 }

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TodoServerApp.Data;
 
@@ -11,9 +12,11 @@ using TodoServerApp.Data;
 namespace TodoServerApp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251219083603_InitialCreate")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -334,38 +337,12 @@ namespace TodoServerApp.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
                     b.ToTable("Profiles");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Age = 19,
-                            Bio = "Ищу крутого",
-                            City = "Когалым",
-                            LastActive = new DateTime(2025, 10, 18, 16, 50, 26, 972, DateTimeKind.Local).AddTicks(1174),
-                            Name = "Катя"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Age = 21,
-                            Bio = "Ищу игрока в покер",
-                            City = "Артёмовск",
-                            LastActive = new DateTime(2025, 12, 11, 16, 50, 26, 972, DateTimeKind.Local).AddTicks(1216),
-                            Name = "Димитрий"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Age = 23,
-                            Bio = "Хожу в качалку",
-                            City = "Тюмень",
-                            LastActive = new DateTime(2025, 12, 17, 19, 50, 26, 972, DateTimeKind.Local).AddTicks(1223),
-                            Name = "Егор"
-                        });
                 });
 
             modelBuilder.Entity("InterestProfile", b =>

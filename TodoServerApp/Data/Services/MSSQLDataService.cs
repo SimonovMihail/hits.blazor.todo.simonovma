@@ -58,5 +58,13 @@ namespace TodoServerApp.Data.Services
             await context.Messages.AddAsync(message);
             await context.SaveChangesAsync();
         }
+
+        public async Task<Profile> GetProfileByUserIdAsync(string userId)
+        {
+            // ищем профиль, у которого UserId совпадает с переданным
+            return await context.Profiles
+                .Include(p => p.Interests) // не забываем интересы
+                .FirstOrDefaultAsync(p => p.UserId == userId);
+        }
     }
 }

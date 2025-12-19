@@ -8,14 +8,14 @@ namespace TodoServerApp.Data
         public int Id { get; set; }
 
         [Required(ErrorMessage = "Сообщение не может быть пустым")]
-        public string Text { get; set; }
+        public string Text { get; set; } = string.Empty;
 
         public DateTime Created { get; set; } = DateTime.Now;
 
         public int SenderId { get; set; }
-        public Profile Sender { get; set; }
+        public Profile Sender { get; set; } = null!;
 
         public int ReceiverId { get; set; }
-        public Profile Receiver { get; set; }
+        public Profile Receiver { get; set; } = null!;
     }
 }

@@ -1,6 +1,8 @@
 ﻿@page "/"
 @using TodoServerApp.Data
 @using TodoServerApp.Data.Interfaces
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthStateProvider
 @rendermode InteractiveServer
 @inject IDataService data
 
@@ -57,9 +59,12 @@
                     </td>
                     <td>@profile.Bio</td>
                     <td>
-                        <a href="/chat/1/@profile.Id" class="btn btn-primary btn-sm">
-                            Написать
-                        </a>
+                        @if (!string.IsNullOrEmpty(myUserId) && hasProfile && profile.UserId != myUserId)
+                        {
+                            <a href="/chat/@profile.Id" class="btn btn-primary btn-sm">
+                                Написать
+                            </a>
+                        }
                     </td>
                 </tr>
             }
@@ -74,15 +79,32 @@
 
     List<Interest> allInterests = new();
 
+    string? myUserId;
+
+    bool hasProfile = false;
+
     protected override async Task OnInitializedAsync()
     {
         var profilesData = await data.GetProfilesAsync();
         allProfiles = profilesData.ToList();
-
         displayedProfiles = allProfiles;
 
         var interestsData = await data.GetInterestsAsync();
         allInterests = interestsData.ToList();
+
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity != null && user.Identity.IsAuthenticated)
+        {
+            myUserId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+            if (!string.IsNullOrEmpty(myUserId))
+            {
+                var myProfile = await data.GetProfileByUserIdAsync(myUserId);
+                hasProfile = (myProfile != null);
+            }
+        }
     }
 
     private void FilterProfiles(ChangeEventArgs e)

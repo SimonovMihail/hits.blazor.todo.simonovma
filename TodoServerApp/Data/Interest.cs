@@ -8,10 +8,10 @@ namespace TodoServerApp.Data
         public int Id { get; set; }
 
         [Required]
-        public string Title { get; set; }
+        public string Title { get; set; } = string.Empty;
 
         // связь с профилями
-        [JsonIgnore] // это нужно, чтобы при сериализации не было бесконечного цикла
+        [JsonIgnore]
         public List<Profile> Profiles { get; set; } = new();
     }
 }
